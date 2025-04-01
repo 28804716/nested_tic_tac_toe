@@ -24,14 +24,13 @@ def n_to_xo_plaintext(n):
     elif n == 2:
         return "x"
     else:   
-        return " "
+        return ""
 
 def latex_gamestate_small(gamestate_matrix,size='small',focus=False):
     
     if size == 'small':
         if focus:
-            s=r"\begin{array}{||c:c:c||}"
-            s+=r"\hline\hline"
+            s=r"\boxed{\begin{array}{c:c:c}"
         else:
             s=r"\begin{array}{c:c:c}"
         
@@ -53,8 +52,9 @@ def latex_gamestate_small(gamestate_matrix,size='small',focus=False):
                 s+=r"\\\hline"
                 
     if focus:
-        s+=r"\\\hline\hline"
-    s+=r"\end{array}"
+        s+=r"\end{array}}"
+    else:
+        s+=r"\end{array}"
     return s
 
 def sub_matrix(y,r,c):
@@ -100,7 +100,7 @@ if 'game_focus' not in st.session_state:
 st.session_state.playername1=""
 st.session_state.playername2=""
 
-
+st.header("Nested Tic-Tac-Toe")
 
 
 with st.sidebar:
@@ -184,7 +184,7 @@ with  big_col2:
            
            with small_cols[col]:
                
-                if st.button(f"{str(n_to_xo_plaintext(sub_gamestate_matrix[row][col]))}",key=f"{col}{row}",disabled=sub_gamestate_matrix[row][col]>0,on_click=print(sub_gamestate_matrix)):
+                if st.button(f"{str(n_to_xo_plaintext(sub_gamestate_matrix[row][col]))}",key=f"{col}{row}",disabled=sub_gamestate_matrix[row][col]>0,use_container_width=True):
                     
                     print(f"Button {col}{row} pressed by player {st.session_state.player_turn}")
                     if ( datetime.datetime.now()- st.session_state.last_button_press>datetime.timedelta(seconds=0.2)):
