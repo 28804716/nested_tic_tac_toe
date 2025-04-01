@@ -30,8 +30,8 @@ def latex_gamestate_small(gamestate_matrix,size='small',focus=False):
     
     if size == 'small':
         if focus:
-            s=r"\begin{array}{|c:c:c|}"
-            s+=r"\hline "
+            s=r"\begin{array}{||c:c:c||}"
+            s+=r"\hline\hline"
         else:
             s=r"\begin{array}{c:c:c}"
         
@@ -53,7 +53,7 @@ def latex_gamestate_small(gamestate_matrix,size='small',focus=False):
                 s+=r"\\\hline"
                 
     if focus:
-        s+=r"\\\hline"
+        s+=r"\\\hline\hline"
     s+=r"\end{array}"
     return s
 
@@ -86,8 +86,8 @@ if 'gamestate_matrix' not in st.session_state:
     st.session_state.gamestate_matrix=np.zeros((9,9))#np.round(2*np.random.rand(9,9)).astype(int)
     
     
-if 'gamestate_matrix' not in st.session_state:
-    game_win_matrix=np.zeros((3,3))
+if 'game_win_matrix' not in st.session_state:
+    st.session_state.game_win_matrix=np.zeros((3,3))
     
 if 'player_turn' not in st.session_state:
     st.session_state.player_turn=1
@@ -104,8 +104,10 @@ st.session_state.playername2=""
 
 
 with st.sidebar:
-    st.session_state.playername1=st.text_area("(o) Player 1 Name")
-    st.session_state.playername2=st.text_area("(x) Player 2 Name")
+    st.session_state.playername1=st.text_area(f"(o) Player 1 Name ({np.sum(st.session_state.game_win_matrix==1)} points)")
+    st.session_state.playername2=st.text_area(f"(x) Player 2 Name ({np.sum(st.session_state.game_win_matrix==1)} points)")
+    st.write("Game Summary:")
+    st.latex(latex_gamestate_small(st.session_state.game_win_matrix,size='small',focus=False))
     
     
 if 'last_button_press' not in st.session_state:
@@ -115,38 +117,69 @@ if 'last_button_press' not in st.session_state:
 player_turn_str=""
 
 if st.session_state.player_turn == 1:
-    player_turn_str+="Player 1"
+    player_turn_str+=f"Player 1 ({np.sum(st.session_state.game_win_matrix==1)} points)"
+
     if len(st.session_state.playername1)>0:
         player_turn_str+=f" ({st.session_state.playername1})"
     player_turn_str+=f" to play ({n_to_xo_plaintext(st.session_state.player_turn)})"
         
 if st.session_state.player_turn == 2:
-    player_turn_str+="Player 2"
+    player_turn_str+=f"Player 2 ({np.sum(st.session_state.game_win_matrix==2)} points)"
     if len(st.session_state.playername2)>0:
         player_turn_str+=f" ({st.session_state.playername2})"
     player_turn_str+=f" to play ({n_to_xo_plaintext(st.session_state.player_turn)})"
-    
-    
-st.text(player_turn_str)
 
-big_col1,big_col2= st.columns([1,1])
+for row in range(3):
+    for col in range(3):
+        sub_gamestate_matrix=sub_matrix(st.session_state.gamestate_matrix, row, col)
+        if st.session_state.game_win_matrix[row][col] == 0:
+            
+            for p in [1,2]:
+                pwin=p*np.ones(3)
+                #Diangonals
+                if np.array_equal(np.fliplr(sub_gamestate_matrix).diagonal(),pwin) or np.array_equal(sub_gamestate_matrix.diagonal(),pwin):
+                    st.session_state.game_win_matrix[row][col]=p
+                
+                #Across and down
+                for i in range(3):
+                    if np.array_equal(sub_gamestate_matrix[i],pwin) or np.array_equal((sub_gamestate_matrix.T)[i],pwin):
+                        st.session_state.game_win_matrix[row][col]=p    
+            if st.session_state.game_win_matrix[row][col]!=0:st.rerun()
+    
 
+
+big_cols,big_col1,big_col2= st.columns([1,3,1])
+
+with big_cols:
+    st.write("Game Summary:")
+    st.latex(latex_gamestate_small(st.session_state.game_win_matrix,size='small',focus=False))
 
 with big_col1:
+    st.write("Entire Field:")
     st.latex(latex_gamestate(st.session_state.gamestate_matrix,game_focus=st.session_state.game_focus))
 
 with  big_col2:
-
-   small_cols = st.columns([1,1,1,1])
+    st.text(player_turn_str)
+    small_cols = st.columns([1,1,1])
    
-   sub_gamestate_matrix=sub_matrix(st.session_state.gamestate_matrix, st.session_state.game_focus[0], st.session_state.game_focus[1])
-   if 0 not in sub_gamestate_matrix:
+    
+   #Scoring:
+        #Check that game has not already been scored
+        
+    
+                                
+                                
+                
+    sub_gamestate_matrix=sub_matrix(st.session_state.gamestate_matrix, st.session_state.game_focus[0], st.session_state.game_focus[1])
+    if 0 not in sub_gamestate_matrix:
        print("CANNOT CONTINUE")
        st.session_state.game_focus[0]=int(round(2*np.random.rand()))
        st.session_state.game_focus[1]=int(round(2*np.random.rand()))
        st.rerun()
+       
+
    
-   for row in range(3):
+    for row in range(3):
        for col in range(3):
            
            with small_cols[col]:
@@ -167,6 +200,7 @@ with  big_col2:
                             st.session_state.gamestate_matrix[3*st.session_state.game_focus[0]+row][3*st.session_state.game_focus[1]+col]=2
                             st.session_state.player_turn = 1
                             
+                            
                         st.session_state.game_focus[0]=row
                         st.session_state.game_focus[1]=col
                         
@@ -179,5 +213,6 @@ with big_col1:
     if st.button("Reset Match",type="primary"):
         print("Resetting match")
         st.session_state.gamestate_matrix=np.zeros((9,9))
+        st.session_state.game_win_matrix=np.zeros((3,3))
         st.rerun()
         
