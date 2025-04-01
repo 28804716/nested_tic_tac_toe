@@ -140,16 +140,21 @@ with  big_col2:
    small_cols = st.columns([1,1,1,1])
    
    sub_gamestate_matrix=sub_matrix(st.session_state.gamestate_matrix, st.session_state.game_focus[0], st.session_state.game_focus[1])
+   if 0 not in sub_gamestate_matrix:
+       print("CANNOT CONTINUE")
+       st.session_state.game_focus[0]=int(round(2*np.random.rand()))
+       st.session_state.game_focus[1]=int(round(2*np.random.rand()))
+       st.rerun()
    
    for row in range(3):
        for col in range(3):
            
            with small_cols[col]:
                
-                if st.button(f"{str(n_to_xo_plaintext(sub_gamestate_matrix[row][col]))}",key=f"{col}{row}",disabled=sub_gamestate_matrix[row][col]>0,on_click=print(st.session_state.gamestate_matrix)):
+                if st.button(f"{str(n_to_xo_plaintext(sub_gamestate_matrix[row][col]))}",key=f"{col}{row}",disabled=sub_gamestate_matrix[row][col]>0,on_click=print(sub_gamestate_matrix)):
                     
                     print(f"Button {col}{row} pressed by player {st.session_state.player_turn}")
-                    if ( datetime.datetime.now()- st.session_state.last_button_press>datetime.timedelta(seconds=1)):
+                    if ( datetime.datetime.now()- st.session_state.last_button_press>datetime.timedelta(seconds=0.2)):
                         st.session_state.last_button_press=datetime.datetime.now()
                         if st.session_state.player_turn == 1:
                             print(f"Player 1 {3*st.session_state.game_focus[1]+col}{3*st.session_state.game_focus[0]+row} pressed")
