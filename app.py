@@ -61,6 +61,7 @@ def sub_matrix(y,r,c):
     return np.reshape([y[3*r][3*c:3*c+3],
      y[3*r+1][3*c:3*c+3],
      y[3*r+2][3*c:3*c+3]],(3,3))
+
         
 
 
@@ -80,6 +81,13 @@ def latex_gamestate(gamestate_matrix,game_focus=[0,0],winner=0):
     s+=r"\end{array}"
     
     return s
+
+
+st.set_page_config(
+        page_title="Nested Tic-Tac-Toe",
+        page_icon="🎲",
+        layout="wide",
+    )
 
 if 'gamestate_matrix' not in st.session_state:
     print("regenerated matrix")
@@ -104,8 +112,8 @@ st.header("Nested Tic-Tac-Toe")
 
 
 with st.sidebar:
-    st.session_state.playername1=st.text_area(f"(o) Player 1 Name ({np.sum(st.session_state.game_win_matrix==1)} points)")
-    st.session_state.playername2=st.text_area(f"(x) Player 2 Name ({np.sum(st.session_state.game_win_matrix==2)} points)")
+    st.session_state.playername1=st.text_area("(o) Player 1 Name ")
+    st.session_state.playername2=st.text_area("(x) Player 2 Name ")
     st.write("Game Summary:")
     st.latex(latex_gamestate_small(st.session_state.game_win_matrix,size='small',focus=False))
     
@@ -113,21 +121,10 @@ with st.sidebar:
 if 'last_button_press' not in st.session_state:
     st.session_state.last_button_press =  datetime.datetime.now()
 
-    
-player_turn_str=""
-
-if st.session_state.player_turn == 1:
-    player_turn_str+=f"Player 1 ({np.sum(st.session_state.game_win_matrix==1)} points)"
-
-    if len(st.session_state.playername1)>0:
-        player_turn_str+=f" ({st.session_state.playername1})"
-    player_turn_str+=f" to play ({n_to_xo_plaintext(st.session_state.player_turn)})"
         
-if st.session_state.player_turn == 2:
-    player_turn_str+=f"Player 2 ({np.sum(st.session_state.game_win_matrix==2)} points)"
-    if len(st.session_state.playername2)>0:
-        player_turn_str+=f" ({st.session_state.playername2})"
-    player_turn_str+=f" to play ({n_to_xo_plaintext(st.session_state.player_turn)})"
+player_names=[st.session_state.playername1,st.session_state.playername2]
+
+player_turn_str="{} to play {}s".format("'"+str(player_names[st.session_state.player_turn-1])+"'" if len(player_names[st.session_state.player_turn-1])>0 else f"Player {st.session_state.player_turn}",n_to_xo_plaintext(st.session_state.player_turn).upper())
 
 for row in range(3):
     for col in range(3):
@@ -165,19 +162,21 @@ if winner>0:
     st.session_state.game_focus=[1,1]
     
 
-big_cols,big_col1,big_col2= st.columns([1,3,1])
+big_col2,big_col1,big_cols,= st.columns([1,3,1],vertical_alignment="top",border=True)
 
 with big_cols:
-    st.write("Game Summary:")
+    st.subheader("Game Summary:")
     st.latex(latex_gamestate_small(st.session_state.game_win_matrix,size='small',focus=False))
 
 with big_col1:
-    st.write("Entire Field:")
+    st.subheader("Entire Field:")
     st.latex(latex_gamestate(st.session_state.gamestate_matrix,game_focus=st.session_state.game_focus,winner=winner))
 
 with  big_col2:
+    st.subheader("Select square:")
     st.text(player_turn_str)
     small_cols = st.columns([1,1,1])
+
    
     
    #Scoring:
@@ -226,12 +225,13 @@ with  big_col2:
                     
                                 
 with big_col1:
-
-    if st.button("Reset Match",type="primary"):
-        print("Resetting match")
-        st.session_state.gamestate_matrix=np.zeros((9,9))
-        st.session_state.game_win_matrix=np.zeros((3,3))
-        st.session_state.game_focus[0]=int(round(2*np.random.rand()))
-        st.session_state.game_focus[1]=int(round(2*np.random.rand()))
-        st.rerun()
+    small_col1, small_col2, small_col3 = st.columns([1,1,1])
+    with small_col2:
+        if st.button("Reset Match",type="primary"):
+            print("Resetting match")
+            st.session_state.gamestate_matrix=np.zeros((9,9))
+            st.session_state.game_win_matrix=np.zeros((3,3))
+            st.session_state.game_focus[0]=int(round(2*np.random.rand()))
+            st.session_state.game_focus[1]=int(round(2*np.random.rand()))
+            st.rerun()
         
